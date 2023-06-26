@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" class="h-100">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Countdown</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"
+    integrity="sha512-t4GWSVZO1eC8BM339Xd7Uphw5s17a86tIZIj8qRxhnKub6WoyhnrxeCIMeAqBPgdZGlCcG2PrZjMc+Wr78+5Xg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"
+    integrity="sha512-VK2zcvntEufaimc+efOYi622VN5ZacdnufnmX7zIhCPmjhKnOi9ZDMtg1/ug5l183f19gG1/cBstPO4D8N/Img=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"
+    integrity="sha512-39BSQXI5q1XlvVhLfFRidKG8KM6Tr6VS/XSnNo6N/A0ZXexHCeoUI/s+ulujQy3UREjoLNrMnFat8VI0mMugWA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/datejs/1.0/date.min.js"
+    integrity="sha512-/n/dTQBO8lHzqqgAQvy0ukBQ0qLmGzxKhn8xKrz4cn7XJkZzy+fAtzjnOQd5w55h4k1kUC+8oIe6WmrGUYwODA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+  <style>
+    .title {
+      font-size: 10rem;
+    }
+
+    .countdown {
+      font-size: 20rem;
+    }
+
+    .countdown-input {
+      width: 20rem;
+      font-size: 10rem;
+      padding: 0;
+      margin: 0;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body class="h-100">
+  <div class="container-fluid h-100 text-center">
+    <div class="row h-100">
+      <div class="col align-self-center">
+        <div class="title">{{ level }}</div>
+        <div class="countdown" id="countdown">{{hour}}:{{minute}}:{{second}}</div>
+        <button class="btn btn-success btn-lg me-2" type="button" id="btn-start">Start</button>
+        <button class="btn btn-secondary btn-lg me-2" type="button" id="btn-pause">Pause</button>
+        <button class="btn btn-outline-secondary btn-lg" type="button" id="btn-reset">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    const startAt = new Date()
+
+    const app = Vue.createApp({
+      data() {
+        return {
+          level: 'Ready',
+          hour: '--',
+          minute: '--',
+          second: '--',
+          countdown: null,
+          current: null,
+        }
+      },
+      methods: {
+        setElapsed(elapsed) {
+          this.hour = `${parseInt(elapsed / 3600 / 1000)}`.padStart(2, '0')
+          this.minute = `${parseInt(elapsed / 60 / 1000)}`.padStart(2, '0')
+          this.second = `${parseInt(elapsed / 1000)}`.padStart(2, '0')
+        },
+        start() {
+          if (!this.countdown) {
+            return
+          }
+          if (this.timer) {
+            return
+          }
+          this.level = 'Ongoing'
+          this.timer = setInterval(() => {
+            this.current = this.current - 1
+          }, 1000)
+        },
+        pause() {
+          if (this.timer) {
+            clearInterval(this.timer)
+            this.timer = null
+            this.level = 'Pause'
+          }
+        },
+        reset() {
+          if (this.timer) {
+            clearInterval(this.timer)
+            this.timer = null
+          }
+          this.level = 'Ready'
+          this.current = this.countdown
+        },
+        setElapsed(value) {
+          if (value) {
+            this.hour = `${parseInt(value / 3600)}`.padStart(2, '0')
+            this.minute = `${parseInt((value - this.hour * 3600) / 60)}`.padStart(2, '0')
+            this.second = `${parseInt(value - (this.hour * 3600 + this.minute * 60))}`.padStart(2, '0')
+          } else {
+            this.hour = '--'
+            this.minute = '--'
+            this.second = '--'
+          }
+        }
+      },
+      watch: {
+        current: {
+          handler: function () {
+            this.setElapsed(this.current)
+          }
+        }
+      }
+    }).mount(document.querySelector('div.container-fluid'))
+
+    Function.prototype.commentLines = function () {
+      const str = this.toString()
+      const lines = str.split('\n')
+      const start = lines.findIndex(line => line.includes('/*'))
+      const end = lines.findIndex(line => line.includes('*/'))
+      return lines.slice(start + 1, end).join('\n')
+    }
+
+    class Countdown {
+      constructor(startAt) {
+        this.startAt = startAt
+        this.btnStart = document.querySelector('#btn-start')
+        this.btnPause = document.querySelector('#btn-pause')
+        this.btnReset = document.querySelector('#btn-reset')
+        this.btnStart.addEventListener('click', () => {
+          app.start()
+        })
+        this.btnPause.addEventListener('click', () => {
+          app.pause()
+        })
+        this.btnReset.addEventListener('click', () => {
+          app.reset()
+        })
+
+        this.countdown = document.querySelector('#countdown')
+        this.countdown.addEventListener('dblclick', () => {
+          function editForm() {/*
+<div class="input-group justify-content-center mt-5 mb-5">
+  <input type="text" class="form-control-lg countdown-input" placeholder="HH" />
+  <span class="input-group-text">:</span>
+  <input type="text" class="form-control-lg countdown-input" placeholder="MM" />
+  <span class="input-group-text">:</span>
+  <input type="text" class="form-control-lg countdown-input" placeholder="SS" />
+</div>
+*/}
+          this.countdown.innerHTML = editForm.commentLines()
+          document.querySelector('div.input-group > input:nth-child(1)').focus()
+          document.querySelector('div.input-group > input:nth-child(5)').addEventListener('blur', (e) => {
+            const hourInput = document.querySelector('div.input-group > input:nth-child(1)')
+            const minuteInput = document.querySelector('div.input-group > input:nth-child(3)')
+            const secondInput = document.querySelector('div.input-group > input:nth-child(5)')
+            app.countdown = hourInput.value * 3600 + minuteInput.value * 60 + parseInt(secondInput.value)
+            app.current = app.countdown
+            app.setElapsed(app.countdown)
+          })
+        })
+      }
+    }
+
+    const countdown = new Countdown(startAt)
+  </script>
+</body>
+
+</html>
